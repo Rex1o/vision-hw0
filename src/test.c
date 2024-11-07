@@ -16,6 +16,7 @@ int same_image(image a, image b){
 
 void test_get_pixel(){
     image im = load_image("data/dots.png");
+    
     // Test within image
     TEST(within_eps(0, get_pixel(im, 0,0,0)));
     TEST(within_eps(1, get_pixel(im, 1,0,1)));
