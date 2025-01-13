@@ -116,9 +116,9 @@ void rgb_to_hsv(image im)
             else if (r == value)
                 huePrime = (g - b) / C;
             else if (g == value)
-                huePrime = (b - r) / C + 2.0;
+                huePrime = ((b - r) / C) + 2.0;
             else if (b == value)
-                huePrime = (r - g) / C + 4.0;
+                huePrime = ((r - g) / C) + 4.0;
 
             float hue = huePrime / 6.0;
             if (hue < 0)
@@ -133,7 +133,7 @@ void rgb_to_hsv(image im)
 
 void hsv_to_rgb(image im)
 {
-    for (size_t h = 0; h < im.h; h++)
+       for (size_t h = 0; h < im.h; h++)
     {
         for (size_t w = 0; w < im.w; w++)
         {
@@ -148,13 +148,13 @@ void hsv_to_rgb(image im)
 		    float X = (1 - fabs(fmod(huePrime, 2) - 1)); 
 
             float midValue = (C * X) + min;
-            if (huePrime < 1) { // Goes towards red
-                r = midValue;
-                g = value;
-                b = min;
-            } else if (huePrime < 2) { // Goes towards yellow
+            if (huePrime < 1 && huePrime >= 0) { // Goes towards red
                 r = value;
                 g = midValue;
+                b = min;
+            } else if (huePrime < 2) { // Goes towards yellow
+                r = midValue;
+                g = value;
                 b = min;
             } else if (huePrime < 3) { // Goes towards green
                 r = min;
