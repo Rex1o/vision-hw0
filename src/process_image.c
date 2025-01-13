@@ -133,7 +133,7 @@ void rgb_to_hsv(image im)
 
 void hsv_to_rgb(image im)
 {
-       for (size_t h = 0; h < im.h; h++)
+    for (size_t h = 0; h < im.h; h++)
     {
         for (size_t w = 0; w < im.w; w++)
         {
