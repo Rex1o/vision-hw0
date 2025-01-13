@@ -69,11 +69,7 @@ void clamp_image(image im)
             for (size_t c = 0; c < im.c; c++)
             {
                 float channel = get_pixel(im, x, y, c);
-                if (channel > 1) {
-                    channel = 1;
-                    set_pixel(im, x, y, c, channel);
-                }
-                else if (channel < 0){
+                if (channel > 1 || channel < 0) {
                     channel = 1;
                     set_pixel(im, x, y, c, channel);
                 }
@@ -100,34 +96,37 @@ void rgb_to_hsv(image im)
     {
         for (size_t w = 0; w < im.w; w++)
         {
-            float r = get_pixel(im, w,h, 0); // R
-            float g = get_pixel(im, w,h, 1); // G
-            float b = get_pixel(im, w,h, 2); // B
+            float r = get_pixel(im, w, h, 0); // R
+            float g = get_pixel(im, w, h, 1); // G
+            float b = get_pixel(im, w, h, 2); // B
 
-            float value = three_way_max(r,g,b); // Value of V
+            float max = three_way_max(r, g, b); // Value of V
+            float value = max;
+
+            float min = three_way_min(r,g,b);
+            float C = max - min;
 
             float saturation = 0;
-            float minValue = three_way_min(r,g,b);
-            float diff = value - minValue;
-            // Si toutes les valeurs sont egal a 0 eviter de diviser par 0
-            if (r != 0 && g != 0 && b != 0){
-                float saturation = diff / value;
+            if (value != 0) { // If all value are equal to 0 we dont want to divide by 0
+                saturation = C / value;
             }
-            float hue = 0;
-            if (r == value)
-                hue = (g - b)/diff;
+            
+            float huePrime = 0;
+            if (C == 0){}
+            else if (r == value)
+                huePrime = (g - b) / C;
             else if (g == value)
-                hue = (b - r)/diff + 2;
-            else
-                hue = (b - g)/diff + 4;
+                huePrime = (b - r) / C + 2.0;
+            else if (b == value)
+                huePrime = (r - g) / C + 4.0;
 
-            hue = hue/6;            
+            float hue = huePrime / 6.0;
             if (hue < 0)
                 hue++;
 
-            set_pixel(im, w,h, 0, hue); // H
-            set_pixel(im, w,h, 1, saturation); // S
-            set_pixel(im, w,h, 2, value); // V
+            set_pixel(im, w, h, 0, hue); // H
+            set_pixel(im, w, h, 1, saturation); // S
+            set_pixel(im, w, h, 2, value); // V
         }
     }
 }
@@ -138,34 +137,50 @@ void hsv_to_rgb(image im)
     {
         for (size_t w = 0; w < im.w; w++)
         {
-            float h = get_pixel(im, w,h, 0); // H
-            float s = get_pixel(im, w,h, 1); // S
-            float v = get_pixel(im, w,h, 2); // V
+            float hue = get_pixel(im, w, h, 0); // H
+            float saturation = get_pixel(im, w, h, 1); // S
+            float value = get_pixel(im, w, h, 2); // V
+            
+            float r = 0, g= 0, b = 0;
+            float C = saturation * value; // diff
+		    float min = value - C;
+		    float huePrime = hue * 6.0;
+		    float X = (1 - fabs(fmod(huePrime, 2) - 1)); 
 
-            float value = three_way_max(r,g,b); // Value of V
-
-            float saturation = 0;
-            float minValue = three_way_min(r,g,b);
-            float diff = value - minValue;
-            // Si toutes les valeurs sont egal a 0 eviter de diviser par 0
-            if (r != 0 && g != 0 && b != 0){
-                float saturation = diff / value;
+            float midValue = (C * X) + min;
+            if (huePrime < 1) { // Goes towards red
+                r = midValue;
+                g = value;
+                b = min;
+            } else if (huePrime < 2) { // Goes towards yellow
+                r = value;
+                g = midValue;
+                b = min;
+            } else if (huePrime < 3) { // Goes towards green
+                r = min;
+                g = value;
+                b = midValue;
+            } else if (huePrime < 4) { // Goes towards light blue
+                r = min;
+                g = midValue;
+                b = value;
+            } else if (huePrime < 5) { // Goes towards blue
+                r = midValue;
+                g = min;
+                b = value;
+            } else if (huePrime < 6) { // Goes towards cyan
+                r = value;
+                g = min;
+                b = midValue;
+            }else {
+                r = 0;
+                g = 0;
+                b = 0;
             }
-            float hue = 0;
-            if (r == value)
-                hue = (g - b)/diff;
-            else if (g == value)
-                hue = (b - r)/diff + 2;
-            else
-                hue = (b - g)/diff + 4;
 
-            hue = hue/6;            
-            if (hue < 0)
-                hue++;
-
-            set_pixel(im, w,h, 0, hue); // R
-            set_pixel(im, w,h, 1, saturation); // G
-            set_pixel(im, w,h, 2, value); // B
-        }
+            set_pixel(im, w, h, 0, r); // R
+            set_pixel(im, w, h, 1, g); // G
+            set_pixel(im, w, h, 2, b); // B
+	    }
     }
 }
